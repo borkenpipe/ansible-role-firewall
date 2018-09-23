@@ -6,6 +6,7 @@
   command: >
     iptables -F
     creates=/etc/firewall.bash
+  become: yes
 
 - name: Copy firewall script into place.
   template:
@@ -15,6 +16,7 @@
     group: root
     mode: 0744
   notify: restart firewall
+  become: yes
 
 - name: Copy firewall init script into place.
   template:
@@ -24,6 +26,7 @@
     group: root
     mode: 0755
   when: "ansible_service_mgr != 'systemd'"
+  become: yes
 
 - name: Copy firewall systemd unit file into place (for systemd systems).
   template:
@@ -33,6 +36,7 @@
     group: root
     mode: 0644
   when: "ansible_service_mgr == 'systemd'"
+  become: yes
 
 - name: Configure the firewall service.
   service:
@@ -42,3 +46,12 @@
 
 - import_tasks: disable-other-firewalls.yml
   when: firewall_disable_firewalld or firewall_disable_ufw
+  become: yes
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: True
+  become: yes
